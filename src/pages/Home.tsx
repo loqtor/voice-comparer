@@ -54,7 +54,7 @@ export const Home = class Home extends Component<{}, IHomeState> {
     });
   }
 
-  onStop = async (mediaUrl: string, event: any, state: IRecorderState) => {
+  onStop = async (mediaUrl: string, state: IRecorderState) => {
     const { audioUris, streams, decodedAudios } = this.state;
 
     const file = await fetch(mediaUrl);
