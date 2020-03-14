@@ -10,13 +10,23 @@ interface IHomeState {
   streams: any[];
   audioUris: string[];
   streamDataPerTime: IStreamPerTime[],
+  decodedAudios: any[];
 }
 
 export const Home = class Home extends Component<{}, IHomeState> {
-  state: IHomeState = {
-    streams: [],
-    audioUris: [],
-    streamDataPerTime: [],
+  audioContext: AudioContext;
+
+  constructor(props: {}) {
+    super(props);
+
+    this.state = {
+      streams: [],
+      audioUris: [],
+      streamDataPerTime: [],
+      decodedAudios: [],
+    }
+
+    this.audioContext = new AudioContext();
   }
 
   onStart = () => {
@@ -44,12 +54,17 @@ export const Home = class Home extends Component<{}, IHomeState> {
     });
   }
 
-  onStop = (mediaUrl: string, state: IRecorderState) => {
-    const { audioUris, streams } = this.state;
+  onStop = async (mediaUrl: string, event: any, state: IRecorderState) => {
+    const { audioUris, streams, decodedAudios } = this.state;
+
+    const file = await fetch(mediaUrl);
+    const data = await file.arrayBuffer();
+    const decodedAudio = await this.audioContext.decodeAudioData(data);
 
     this.setState({
       streams: [...streams, state.currentStream],
       audioUris: [...audioUris, mediaUrl],
+      decodedAudios: [...decodedAudios, decodedAudio],
     });
   }
 
@@ -70,18 +85,22 @@ export const Home = class Home extends Component<{}, IHomeState> {
             <div className="Stats">
               <table className='Stats Stats-capabilities'>
                 <thead>
-                  <th>Stream {streamIndex + 1}</th>
-                  <th>Autogain Control</th>
-                  <th>Channel count</th>
-                  <th>Device ID</th>
-                  <th>Echo cancellation</th>
-                  <th>groupId</th>
-                  <th>Latency</th>
-                  <th>Noise suppression</th>
-                  <th>Sample rate</th>
-                  <th>Sample size</th>
+                  <tr>
+                    <th>Stream {streamIndex + 1}</th>
+                    <th>Autogain Control</th>
+                    <th>Channel count</th>
+                    <th>Device ID</th>
+                    <th>Echo cancellation</th>
+                    <th>groupId</th>
+                    <th>Latency</th>
+                    <th>Noise suppression</th>
+                    <th>Sample rate</th>
+                    <th>Sample size</th>
+                  </tr>
                 </thead>
-                {audioTracks.map((audioTrack: any, audioTrackIndex: number) => <AudioTrackCapabilities audioTrack={audioTrack} index={audioTrackIndex}/>)}
+                <tbody>
+                  {audioTracks.map((audioTrack: any, audioTrackIndex: number) => <AudioTrackCapabilities audioTrack={audioTrack} index={audioTrackIndex}/>)}
+                </tbody>
               </table>
               {/* <table className='Stats Stats-contraints'>
                 {audioTracks.map((audioTrack) => )}
